@@ -79,6 +79,7 @@ class Pembayaran extends MY_Controller {
                         $data2['keterangan']  = $data['keterangan'];
 
                         $id_pembayaran = $this->pembayaran_model->insertGetID($data2);
+                        $pesan['fk_bayar_id'] = $id_pembayaran;
                         //echo $id_pembayaran."|";
     //                    var_dump($this->tagihan_model->getDataDetail($data['fk_tagihan_id'])[0]->sisa_tunggakan);
                         foreach($this->tagihan_model->getDataDetail($data['fk_tagihan_id']) as $tag_det ){
@@ -195,6 +196,15 @@ class Pembayaran extends MY_Controller {
             }
             
             echo json_encode($pesan);
+        }
+        
+        public function bukti_pembayaran($id_pembayaran){
+            $this->load->library('Pdf');
+            //$this->load->view('view_file');
+            $data = array();
+            $data['pembayaran'] = $this->pembayaran_model->getBuktiBayar($id_pembayaran);
+            $data['pembayaran_detail'] = $this->pembayaran_model->getBuktiBayarDetail($id_pembayaran);
+            $this->view('pembayaran/bukti_bayar', $data);
         }
 	
 	public function cto_getDatas(){
