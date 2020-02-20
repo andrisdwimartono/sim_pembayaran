@@ -10,7 +10,7 @@
             <div class="box-header">
               <i class="fa fa-wpforms"></i>
 
-              <h4 class="box-title">Lihat Kartu Tagihan Pembayaran</h4>
+              <h4 class="box-title">Lihat Kartu Tagihan dan Pembayaran</h4>
               <!-- tools box -->
               <div class="pull-right box-tools">
                 <button type="button" class="btn btn-sm" data-widget="collapse"><i class="fa fa-minus"></i>
@@ -137,9 +137,10 @@
                             echo "<td>".number_format($pem_det->nominal_bayar, 2)."</td>";
                             echo "<td>".number_format($pem_det->kembalian, 2)."</td>";
                             if($pem_det->status == -1){
-                                echo "<td></td></tr>";
+                                echo "<td>Batal</td></tr>";
                             }else{
-                                echo "<td>".'<li class="btn btn-xs fa fa-trash" onclick="delete_pembayaran('.$pem_det->id.', \''.$i.',  Tgl '.$pem_det->tgl_bayar.'\');"></li>'."</td></tr>";
+                                echo "<td>".'<li class="btn btn-xs fa fa-trash" onclick="delete_pembayaran('.$pem_det->id.', \''.$i.',  Tgl '.$pem_det->tgl_bayar.'\');"></li>'
+                                        . '<a href="'.base_url().'pembayaran/bukti_pembayaran/'.$pem_det->id.'" target="_blank"><li class="btn btn-xs fa fa-print"></li></a>'."</td></tr>";
                                 $tot += $pem_det->nominal_bayar;
                                 $tot_kembali += $pem_det->kembalian;
                             }
@@ -267,15 +268,15 @@ var ctojs_fields = ['fk_siswa_id', 'fk_paket_id'];
 		return data;
 		}
 		
-               function delete_pembayaran(id_pembayaran, pem_ke_tgl){
-                   var deleting = confirm("Hapus pembayaran ke-"+pem_ke_tgl+"?");
-                   if(deleting){
-                       var del = ajaxGetValue("<?php echo base_url(); ?>pembayaran/delete_pembayaran/", id_pembayaran);
-                       alert(del['messages']);
-                   }else{
-                        
-                   }
-                   
-               }
+            function delete_pembayaran(id_pembayaran, pem_ke_tgl){
+                var deleting = confirm("Hapus pembayaran ke-"+pem_ke_tgl+"?");
+                if(deleting){
+                    var del = ajaxGetValue("<?php echo base_url(); ?>pembayaran/delete_pembayaran/", id_pembayaran);
+                    alert(del['messages']);
+                }else{
+
+                }
+
+            }
 </script>
 <?php $this->load->view('layouts/footer');?>

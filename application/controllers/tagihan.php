@@ -117,7 +117,18 @@ class Tagihan extends MY_Controller {
                 $data['pembayaran_detail'] = $this->pembayaran_model->getDataDetail($id);
 		$this->view('tagihan/view_kartu_tagihan_detail', $data);
 	}
-
+        
+        public function kartu_tagihan($id){
+            $this->load->library('Pdf');
+            foreach($this->tagihan_model->getAData($id) as $x => $y){
+                    $data[$x] = $y;
+            }
+            //var_dump($data);die();
+            $data['cto_id'] = $id;
+            $data['tagihan_detail'] = $this->tagihan_model->getDataDetail($id);
+            $data['pembayaran_detail'] = $this->pembayaran_model->getDataDetail($id);
+            $this->view('pembayaran/kartu_tagihan', $data);
+	}
 	
 	public function insert()
 	{

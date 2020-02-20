@@ -67,11 +67,13 @@ class Tagihan_model extends MY_Model
 			
 			if($row->status == "Aktif"){
 				$sub_array[] = '<div class="update" data-id="'.$row->id.'" data-column="aktif"><i class="fa fa-circle green" style="color: green;">' . $row->status . '<i></div>';
-				$sub_array[] = '<a href="'.base_url().'tagihan/view_kartu_tagihan/'.$row->id.'" name="Edit" class="btn lime" id="'.$row->id.'" target="_blank"><li class="btn btn-xs fa fa-file"></li></a>'.
-                                        '<a href="#" name="Edit" class="btn lime" id="bayar'.$row->id.'" onclick="openBayarForm('.$row->id.')"><li class="btn btn-xs fa fa-money"></li></a>';
+				$sub_array[] = '<a href="'.base_url().'tagihan/view_kartu_tagihan/'.$row->id.'" name="Edit" class="btn lime" id="'.$row->id.'" target="_blank"><li class="btn btn-xs fa fa-file"></li></a>'
+                                        . '<a href="'.base_url().'tagihan/kartu_tagihan/'.$row->id.'" name="Edit" class="btn lime" id="'.$row->id.'" target="_blank"><li class="btn btn-xs fa fa-print"></li></a>'
+                                        . '<a href="#" name="Edit" class="btn lime" id="bayar'.$row->id.'" onclick="openBayarForm('.$row->id.')"><li class="btn btn-xs fa fa-money"></li></a>';
 			}else{
 				$sub_array[] = '<div class="update" data-id="'.$row->id.'" data-column="aktif"><i class="fa fa-circle green" style="color: red;">' . $row->status . '<i></div>';
-				$sub_array[] = '<a href="'.base_url().'tagihan/view_kartu_tagihan/'.$row->id.'" name="Edit" class="btn lime" id="'.$row->id.'" target="_blank"><li class="btn btn-xs fa fa-file"></li></a>';
+				$sub_array[] = '<a href="'.base_url().'tagihan/view_kartu_tagihan/'.$row->id.'" name="Edit" class="btn lime" id="'.$row->id.'" target="_blank"><li class="btn btn-xs fa fa-file"></li></a>'
+                                        . '<a href="'.base_url().'tagihan/kartu_tagihan/'.$row->id.'" name="Edit" class="btn lime" id="'.$row->id.'" target="_blank"><li class="btn btn-xs fa fa-print"></li></a>';
 			}
 			
 			$sub_array[] ='';
@@ -81,10 +83,12 @@ class Tagihan_model extends MY_Model
 	}
 	
 	public function getAData($id){
-        $query = $this->db->query("select * from (SELECT pt.id, ps.no_induk, ps.nama, pp.nama nama_paket, pp.harga, pp.termin, pt.tagihan_ke, ctd.name status, pt.status status_code, pp.keterangan FROM p_tagihan pt
+        $query = $this->db->query("select * from (SELECT pt.id, ps.no_induk, ps.nama, pp.nama nama_paket, pp.harga, pp.termin, pt.tagihan_ke, ctd.name status, pt.status status_code, pp.keterangan, cc.nama_institusi, cc.petugas FROM p_tagihan pt
                 INNER JOIN p_siswa ps ON ps.id = pt.fk_siswa_id
                 INNER JOIN p_paket pp ON pp.id = pt.fk_paket_id
-                INNER JOIN cto_status_dict ctd ON ctd.code = pt.status AND ctd.table_name = 'p_tagihan') tagihan WHERE  tagihan.id = ".$id);
+                INNER JOIN cto_status_dict ctd ON ctd.code = pt.status AND ctd.table_name = 'p_tagihan'
+                LEFT JOIN (SELECT MAX(cc.id) id, cc.petugas, cc.name nama_institusi FROM cto_company cc) cc ON true) tagihan 
+                WHERE  tagihan.id = ".$id);
 		$result = array();
 		foreach($query->result() as $row){
                     $result['id'] = $row->id;
@@ -97,6 +101,9 @@ class Tagihan_model extends MY_Model
                     $result['keterangan'] = $row->keterangan;
                     $result['status'] = $row->status;
                     $result['status_code'] = $row->status_code;
+                    $result['nama_institusi'] = $row->nama_institusi;
+                    $result['status_code'] = $row->status_code;
+                    $result['petugas'] = $row->petugas;
 		}
 		return $result;
         }

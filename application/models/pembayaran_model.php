@@ -80,11 +80,14 @@ class Pembayaran_model extends MY_Model
 	
 	public function getAData($id){
         $query = $this->db->query("SELECT * FROM p_bayar pb
+            INNER JOIN p_siswa ps ON ps.id = pb.fk_siswa_id
             WHERE pb.id = ".$id);
 		$result = array();
 		foreach($query->result() as $row){
                     $result['id'] = $row->id;
                     $result['fk_tagihan_id'] = $row->fk_tagihan_id;
+                    $result['fk_siswa_id'] = $row->fk_siswa_id;
+                    $result['nama'] = $row->nama;
                     $result['nominal_bayar'] = $row->nominal_bayar;
                     $result['tgl_bayar'] = $row->tgl_bayar;
                     $result['keterangan'] = $row->keterangan;
@@ -157,4 +160,101 @@ class Pembayaran_model extends MY_Model
             return $this->db->affected_rows() ? true : false;
         }
         
+        public function getBuktiBayar($id){
+        $query = $this->db->query("SELECT pb.id,
+                    ps.no_induk,
+                    pb.fk_siswa_id,
+                    pb.fk_tagihan_id,
+                    date_format(pb.tgl_bayar, '%d-%m-%Y') tgl_bayar,
+                    CONCAT(date_format(pb.tgl_bayar, '%d'), ' ', cd.name, ' ', date_format(pb.tgl_bayar, '%Y')) tgl_bayar2,
+                    pb.nominal_bayar,
+                    pb.kembalian,
+                    pb.keterangan,
+                    COALESCE(csd.name, pb.status) status_name,
+                    pb.status,
+                    ps.nama nama_siswa,
+                    pp.nama nama_paket,
+                    pp.termin termin_paket,
+                    pp.harga harga_paket,
+                    cc.petugas,
+                    cc.nama_institusi
+                FROM sim_pembayaran.p_bayar pb
+                LEFT JOIN cto_status_dict csd ON csd.code = pb.status
+                INNER JOIN p_tagihan pt ON pt.id = pb.fk_tagihan_id
+                INNER JOIN p_paket pp ON pt.fk_paket_id = pp.id
+                INNER JOIN p_siswa ps ON ps.id = pb.fk_siswa_id
+                LEFT JOIN cto_dict cd ON cd.code = date_format(pb.tgl_bayar, '%m') AND cd.type  = 'namabulan'
+                LEFT JOIN (SELECT MAX(cc.id) id, cc.petugas, cc.name nama_institusi FROM cto_company cc) cc ON true
+            WHERE pb.id = ".$id);
+		$result = array();
+		foreach($query->result() as $row){
+                    $result['id'] = $row->id;
+                    $result['fk_tagihan_id'] = $row->fk_tagihan_id;
+                    $result['fk_siswa_id'] = $row->fk_siswa_id;
+                    $result['no_induk'] = $row->no_induk;
+                    $result['nama_siswa'] = $row->nama_siswa;
+                    $result['nominal_bayar'] = $row->nominal_bayar;
+                    $result['terbilang_bayar'] = $this->getTerbilang($row->nominal_bayar);
+                    $result['tgl_bayar'] = $row->tgl_bayar;
+                    $result['tgl_bayar2'] = $row->tgl_bayar2;
+                    $result['keterangan'] = $row->keterangan;
+                    $result['status'] = $row->status;
+                    $result['status_name'] = $row->status_name;
+                    $result['nama_paket'] = $row->nama_paket;
+                    $result['petugas'] = $row->petugas;
+                    $result['nama_institusi'] = $row->nama_institusi;
+		}
+		return $result;
+        }
+        
+        public function getBuktiBayarDetail($fk_bayar_id){
+        $query = $this->db->query("SELECT pbs.id, 
+            pbs.fk_bayar_id, 
+            SUM(pbs.nominal) nominal,
+            pbs.status,
+            ca.account_name keterangan
+            FROM sim_pembayaran.p_bayar_spreading pbs
+            LEFT JOIN cto_account ca ON ca.code = CASE WHEN pbs.fk_tagihan_detail_id is null then 4 else pbs.status END
+            WHERE pbs.fk_bayar_id = ".$fk_bayar_id."
+            GROUP BY ca.account_name");
+            $result = array();
+            foreach($query->result() as $row){
+                $res = array();
+                $res['id'] = $row->id;
+                $res['fk_bayar_id'] = $row->fk_bayar_id;
+                $res['nominal'] = $row->nominal;
+                $res['status'] = $row->status;
+                $res['keterangan'] = $row->keterangan;
+                array_push($result, $res);
+            }
+            return $result;
+        }
+        
+        function getTerbilang($nilai){
+            $nilai = abs($nilai);
+            $huruf = array("", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas");
+            $temp = "";
+            if ($nilai < 12) {
+                    $temp = " ". $huruf[$nilai];
+            } else if ($nilai <20) {
+                    $temp = $this->getTerbilang($nilai - 10). " Belas";
+            } else if ($nilai < 100) {
+                    $temp = $this->getTerbilang($nilai/10)." Puluh". $this->getTerbilang($nilai % 10);
+            } else if ($nilai < 200) {
+                    $temp = " Seratus" . $this->getTerbilang($nilai - 100);
+            } else if ($nilai < 1000) {
+                    $temp = $this->getTerbilang($nilai/100) . " Ratus" . $this->getTerbilang($nilai % 100);
+            } else if ($nilai < 2000) {
+                    $temp = " Seribu" . $this->getTerbilang($nilai - 1000);
+            } else if ($nilai < 1000000) {
+                    $temp = $this->getTerbilang($nilai/1000) . " Ribu" . $this->getTerbilang($nilai % 1000);
+            } else if ($nilai < 1000000000) {
+                    $temp = $this->getTerbilang($nilai/1000000) . " Juta" . $this->getTerbilang($nilai % 1000000);
+            } else if ($nilai < 1000000000000) {
+                    $temp = $this->getTerbilang($nilai/1000000000) . " Milyar" . $this->getTerbilang(fmod($nilai,1000000000));
+            } else if ($nilai < 1000000000000000) {
+                    $temp = $this->getTerbilang($nilai/1000000000000) . " Trilyun" . $this->getTerbilang(fmod($nilai,1000000000000));
+            }     
+            return $temp;
+        }
 }

@@ -356,7 +356,7 @@
                 if(data['status']){
                     $('#modal-info').modal('hide');
                     var cetak = confirm("Cetak bukti bayar?");
-                    var win = window.open("<?php echo base_url(); ?>tagihan/view_kartu_tagihan/"+data['id_tagihan'], '_blank');
+                    var win = window.open("<?php echo base_url(); ?>pembayaran/bukti_pembayaran/"+data['fk_bayar_id'], '_blank');
                     win.focus();
                     //cto_messages_show(data);
                     //window.location = "<?php echo base_url(); ?>paket/create";
